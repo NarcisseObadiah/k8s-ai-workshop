@@ -23,7 +23,7 @@ function App() {
         </nav>
 
         <div className="hero-content">
-          <p className="eyebrow">Cloud-native AI demonstration</p>
+          <p className="eyebrow">Cloud-native AI demonstration · Version 2</p>
 
           <h1>
             Build and operate a trustworthy AI application on Kubernetes.
