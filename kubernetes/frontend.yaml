@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudassist-frontend
+  namespace: cloudassist
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: cloudassist-frontend
+
+  template:
+    metadata:
+      labels:
+        app: cloudassist-frontend
+
+    spec:
+      containers:
+        - name: frontend
+          image: europe-west1-docker.pkg.dev/project-6bc48aee-fd23-426b-8c7/cloudassist/frontend:v1
+
+          ports:
+            - containerPort: 8080
+
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudassist-frontend
+  namespace: cloudassist
+spec:
+  selector:
+    app: cloudassist-frontend
+
+  ports:
+    - port: 80
+      targetPort: 8080
+
+  type: LoadBalancer
