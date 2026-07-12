@@ -16,9 +16,16 @@ spec:
       serviceAccountName: cloudassist-backend
       containers:
         - name: backend
-          image: europe-west1-docker.pkg.dev/project-6bc48aee-fd23-426b-8c7/cloudassist/backend:v1
+          image: europe-west1-docker.pkg.dev/project-6bc48aee-fd23-426b-8c7/cloudassist/backend:v2
           ports:
             - containerPort: 8080
+          env:
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "project-6bc48aee-fd23-426b-8c7"
+            - name: GOOGLE_CLOUD_LOCATION
+              value: "global"
+            - name: GEMINI_MODEL
+              value: "gemini-3.1-flash-lite"
           resources:
             requests:
               cpu: "250m"

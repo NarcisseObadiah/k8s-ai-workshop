@@ -1,19 +1,42 @@
-import vertexai
-from vertexai.generative_models import GenerativeModel
+import os
 
-PROJECT_ID = "project-6bc48aee-fd23-426b-8c7"
-LOCATION = "europe-west1"   # We'll verify this region later
+from google import genai
 
-vertexai.init(
+
+PROJECT_ID = os.getenv(
+    "GOOGLE_CLOUD_PROJECT",
+    "project-6bc48aee-fd23-426b-8c7",
+)
+
+LOCATION = os.getenv(
+    "GOOGLE_CLOUD_LOCATION",
+    "global",
+)
+
+MODEL_NAME = os.getenv(
+    "GEMINI_MODEL",
+    "gemini-3.1-flash-lite",
+)
+
+client = genai.Client(
+    vertexai=True,
     project=PROJECT_ID,
     location=LOCATION,
 )
 
-model = GenerativeModel("gemini-2.5-flash")
 
+def ask_gemini(prompt: str) -> str:
+    cleaned_prompt = prompt.strip()
 
-def ask_gemini(prompt: str):
+    if not cleaned_prompt:
+        raise ValueError("Prompt cannot be empty.")
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=cleaned_prompt,
+    )
+
+    if not response.text:
+        raise RuntimeError("Gemini returned an empty response.")
 
     return response.text
