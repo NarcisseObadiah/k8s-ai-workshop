@@ -14,11 +14,6 @@ Follow the complete hands-on workshop instructions:
 
 [Open the Participant Guide](docs/PARTICIPANT_GUIDE.md)
 
-### Facilitators
-
-Session preparation, checkpoints, and troubleshooting:
-
-[Open the Facilitator Guide](docs/FACILITATOR_GUIDE.md)
 
 ## What Participants Will Do
 
