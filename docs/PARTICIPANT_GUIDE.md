@@ -1,5 +1,11 @@
 # CloudAssist AI Kubernetes Workshop — Participant Guide
 
+## Team rotation rule
+
+One authorized team lead signs in and connects the team to the cluster. Every team member must then complete the full hands-on exercise individually, one after another, using the same assigned namespace.
+
+For each turn, the active member completes Steps 7–16, cleans up the application resources in Step 17, and then gives control to the next member. Do not split the steps between members.
+
 ## 1. Sign in
 
 1. Open Google Cloud Console: `https://console.cloud.google.com/`
@@ -9,6 +15,50 @@
 ## 2. Open Cloud Shell
 
 Click the **Activate Cloud Shell** icon in the top-right corner of Google Cloud Console.
+
+
+## If Cloud Shell restarts or disconnects
+
+Run this recovery block before continuing. Replace `team-01` with your assigned namespace.
+
+```bash
+export PROJECT_ID="kubernetes-cloud-workshop"
+export REGION="europe-west1"
+export CLUSTER_NAME="cloudassist-workshop"
+export TEAM_NAMESPACE="team-01"
+
+gcloud auth list
+gcloud config set project "$PROJECT_ID"
+
+gcloud container clusters get-credentials "$CLUSTER_NAME" \
+  --region="$REGION" \
+  --project="$PROJECT_ID"
+
+kubectl config set-context --current \
+  --namespace="$TEAM_NAMESPACE"
+
+cd ~/k8-ai-workshop
+
+kubectl config view --minify \
+  --output='jsonpath={..namespace}'
+echo
+
+kubectl get deployments,pods,services
+```
+
+If `gcloud auth list` shows no active account, run:
+
+```bash
+gcloud auth login
+```
+
+If port-forwarding stopped, restart it:
+
+```bash
+kubectl port-forward \
+  service/cloudassist-frontend \
+  8080:8080
+```
 
 ## 3. Set your workshop variables
 
@@ -58,10 +108,10 @@ no
 
 ## 6. Get the workshop repository
 
-Replace `WORKSHOP_REPOSITORY_URL` with the repository URL provided by the facilitator.
+Clone the workshop repository:
 
 ```bash
-git clone https://github.com/NarcisseObadiah/k8s-ai-workshop
+git clone https://github.com/NarcisseObadiah/k8s-ai-workshop.git k8-ai-workshop
 cd k8-ai-workshop
 ```
 
@@ -181,3 +231,23 @@ kubectl get deployments,pods,services
 ```
 
 Both Deployments must show `READY 1/1`.
+
+## 17. Clean up before the next member
+
+Stop any running port-forward command with `Ctrl+C`, then remove the application resources:
+
+```bash
+kubectl delete -f kubernetes/participant/frontend.yaml \
+  --ignore-not-found
+
+kubectl delete -f kubernetes/participant/backend.yaml \
+  --ignore-not-found
+```
+
+Verify that the application resources are gone:
+
+```bash
+kubectl get deployments,pods,services
+```
+
+The namespace, quota, RoleBinding, and `cloudassist-backend` service account remain available. The next team member now repeats Steps 7–17 from the beginning.

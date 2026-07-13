@@ -1,5 +1,7 @@
 # CloudAssist AI Kubernetes Workshop — Facilitator Guide
 
+Workshop repository: `https://github.com/NarcisseObadiah/k8s-ai-workshop`
+
 ## 1. Pre-session prerequisites
 
 Set the funded project context:
@@ -60,7 +62,62 @@ roles/container.clusterViewer
 
 Verify all team leads were added to `K8s-ai@googlegroups.com`.
 
-## 2. Provision participant namespaces
+
+## 2. Recover after a Cloud Shell restart
+
+Use this block whenever Cloud Shell restarts, the named configuration disappears, variables are lost, or `kubectl` has no current context.
+
+```bash
+unset CLOUDSDK_ACTIVE_CONFIG_NAME
+unset CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+unset GOOGLE_APPLICATION_CREDENTIALS
+
+gcloud auth list
+```
+
+If no account is active:
+
+```bash
+gcloud auth login narcisseobadiahdm@gmail.com
+```
+
+Recreate or activate the workshop configuration:
+
+```bash
+if gcloud config configurations describe workshop \
+  >/dev/null 2>&1; then
+  gcloud config configurations activate workshop
+else
+  gcloud config configurations create workshop --activate
+fi
+
+gcloud config set account narcisseobadiahdm@gmail.com
+gcloud config set project kubernetes-cloud-workshop
+gcloud config set compute/region europe-west1
+
+export PROJECT_ID="kubernetes-cloud-workshop"
+export REGION="europe-west1"
+export CLUSTER_NAME="cloudassist-workshop"
+export REPOSITORY="cloudassist"
+
+gcloud container clusters get-credentials "$CLUSTER_NAME" \
+  --region="$REGION" \
+  --project="$PROJECT_ID"
+
+cd ~/k8-ai-workshop
+
+kubectl cluster-info
+kubectl config current-context
+kubectl get namespaces -l workshop=cloudassist
+```
+
+For participant troubleshooting, always specify the namespace explicitly:
+
+```bash
+kubectl get deployments,pods,services -n team-01
+```
+
+## 3. Provision participant namespaces
 
 Apply the shared participant ClusterRole:
 
@@ -74,14 +131,14 @@ Provision namespaces from `teams_lead.csv`:
 ```bash
 export PROJECT_ID="kubernetes-cloud-workshop"
 
-./workshop-admin/provision-teams.sh \
+./workshop-admin/provision-teams.py \
   teams_lead.csv
 ```
 
 Verify namespace isolation:
 
 ```bash
-./workshop-admin/verify-teams.sh \
+./workshop-admin/verify-teams.py \
   teams_lead.csv
 ```
 
@@ -108,7 +165,7 @@ kubectl get \
   -n team-01
 ```
 
-## 3. Final smoke test with a participant identity
+## 4. Final smoke test with a participant identity
 
 Use a real participant account, not the facilitator account.
 
@@ -151,7 +208,24 @@ kubectl port-forward \
 
 Open Cloud Shell Web Preview on port `8080` and submit one prompt.
 
-## 4. Workshop checkpoints
+## 5. Team rotation rule
+
+One authorized lead account connects the team to the cluster, but every member must complete the entire participant exercise independently.
+
+For each turn:
+
+1. The active member deploys the backend and frontend.
+2. The active member checks Pods, Services, logs, and events.
+3. The active member opens the application with port-forwarding.
+4. The active member tests self-healing.
+5. The active member rolls out frontend v2.
+6. The active member rolls back to v1.
+7. The active member deletes the application resources.
+8. The next member repeats the complete workflow in the same namespace.
+
+Do not divide the exercise into separate tasks. Each member should experience the full deployment and operations lifecycle. The namespace, quota, RoleBinding, and Kubernetes service account remain in place between turns.
+
+## 6. Workshop checkpoints
 
 ### Checkpoint 1 — Cloud access
 
@@ -234,7 +308,7 @@ kubectl rollout history deployment/cloudassist-frontend
 
 Expected: at least two revisions.
 
-## 5. Common errors and exact fixes
+## 7. Common errors and exact fixes
 
 ### No active gcloud account
 
@@ -316,7 +390,7 @@ kubectl auth can-i create deployments \
 Reapply access:
 
 ```bash
-./workshop-admin/provision-teams.sh teams_lead.csv
+./workshop-admin/provision-teams.py teams_lead.csv
 ```
 
 ### Participant can access the wrong namespace
@@ -335,7 +409,7 @@ done
 Correct `teams_lead.csv`, then rerun:
 
 ```bash
-./workshop-admin/provision-teams.sh teams_lead.csv
+./workshop-admin/provision-teams.py teams_lead.csv
 ```
 
 ### Pod is Pending
@@ -391,7 +465,7 @@ cloudassist-backend
 Reapply Workload Identity permissions:
 
 ```bash
-./workshop-admin/provision-teams.sh teams_lead.csv
+./workshop-admin/provision-teams.py teams_lead.csv
 ```
 
 ### Frontend shows 502 or cannot reach backend
@@ -430,7 +504,7 @@ Reapply the ClusterRole and team provisioning:
 
 ```bash
 kubectl apply -f workshop-admin/participant-clusterrole.yaml
-./workshop-admin/provision-teams.sh teams_lead.csv
+./workshop-admin/provision-teams.py teams_lead.csv
 ```
 
 ### Rollout is stuck
@@ -451,7 +525,7 @@ kubectl rollout undo deployment/cloudassist-frontend
 kubectl rollout status deployment/cloudassist-frontend
 ```
 
-## 6. Fast reset for one team
+## 8. Fast reset for one team
 
 Delete only the application resources:
 
@@ -467,7 +541,7 @@ kubectl delete \
 
 Keep the namespace, quota, RoleBinding, and service account.
 
-## 7. End-of-session checks
+## 9. End-of-session checks
 
 List all participant workloads:
 
