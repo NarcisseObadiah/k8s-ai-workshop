@@ -6,3 +6,4 @@ node_modules/
 dist/
 __pycache__/
 application_default_credentials.json
+teams_lead.csv

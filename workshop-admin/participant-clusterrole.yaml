@@ -1,0 +1,70 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cloudassist-participant
+rules:
+  # Read Pods, logs, Services, ConfigMaps and events.
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+      - services
+      - configmaps
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+
+  # Delete Pods for the self-healing exercise.
+  - apiGroups: [""]
+    resources:
+      - pods
+    verbs:
+      - delete
+
+  # Use kubectl port-forward.
+  - apiGroups: [""]
+    resources:
+      - pods/portforward
+    verbs:
+      - create
+
+  # Create and modify internal Services and ConfigMaps.
+  - apiGroups: [""]
+    resources:
+      - services
+      - configmaps
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
+
+  # Manage application Deployments.
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - deployments/scale
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+
+  # Manage the workshop HPA.
+  - apiGroups: ["autoscaling"]
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
