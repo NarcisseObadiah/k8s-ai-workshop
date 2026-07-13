@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudassist-backend
+  namespace: cloudassist-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudassist-backend
+  template:
+    metadata:
+      labels:
+        app: cloudassist-backend
+    spec:
+      serviceAccountName: cloudassist-backend
+      containers:
+        - name: backend
+          image: europe-west1-docker.pkg.dev/kubernetes-cloud-workshop/cloudassist/backend:workshop-v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "kubernetes-cloud-workshop"
+            - name: GOOGLE_CLOUD_LOCATION
+              value: "global"
+            - name: GEMINI_MODEL
+              value: "gemini-3.1-flash-lite"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: cloudassist-demo
+spec:
+  selector:
+    app: cloudassist-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudassist-frontend
+  namespace: cloudassist-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudassist-frontend
+  template:
+    metadata:
+      labels:
+        app: cloudassist-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: europe-west1-docker.pkg.dev/kubernetes-cloud-workshop/cloudassist/frontend:workshop-v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudassist-frontend
+  namespace: cloudassist-demo
+spec:
+  selector:
+    app: cloudassist-frontend
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: LoadBalancer

@@ -3,18 +3,22 @@ kind: ClusterRole
 metadata:
   name: cloudassist-participant
 rules:
-  # Read Pods, logs, Services, ConfigMaps and events.
+  # View Pods and events.
   - apiGroups: [""]
     resources:
       - pods
-      - pods/log
-      - services
-      - configmaps
       - events
     verbs:
       - get
       - list
       - watch
+
+  # Read container logs.
+  - apiGroups: [""]
+    resources:
+      - pods/log
+    verbs:
+      - get
 
   # Delete Pods for the self-healing exercise.
   - apiGroups: [""]
@@ -22,6 +26,7 @@ rules:
       - pods
     verbs:
       - delete
+      - deletecollection
 
   # Use kubectl port-forward.
   - apiGroups: [""]
@@ -30,12 +35,24 @@ rules:
     verbs:
       - create
 
-  # Create and modify internal Services and ConfigMaps.
+  # View the pre-created Kubernetes service account.
+  - apiGroups: [""]
+    resources:
+      - serviceaccounts
+    verbs:
+      - get
+      - list
+      - watch
+
+  # Manage internal Services and ConfigMaps.
   - apiGroups: [""]
     resources:
       - services
       - configmaps
     verbs:
+      - get
+      - list
+      - watch
       - create
       - update
       - patch
@@ -45,8 +62,6 @@ rules:
   - apiGroups: ["apps"]
     resources:
       - deployments
-      - deployments/scale
-      - replicasets
     verbs:
       - get
       - list
@@ -56,7 +71,25 @@ rules:
       - patch
       - delete
 
-  # Manage the workshop HPA.
+  # Inspect ReplicaSets created by Deployments.
+  - apiGroups: ["apps"]
+    resources:
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+
+  # Scale Deployments.
+  - apiGroups: ["apps"]
+    resources:
+      - deployments/scale
+    verbs:
+      - get
+      - update
+      - patch
+
+  # Optional HPA exercise.
   - apiGroups: ["autoscaling"]
     resources:
       - horizontalpodautoscalers
